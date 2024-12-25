@@ -143,24 +143,10 @@
 #endif
 
 // GL includes
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-#if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV))
-#include <OpenGLES/ES2/gl.h>    // Use GL ES 2
-#else
-#include <GLES2/gl2.h>          // Use GL ES 2
-#endif
-#if defined(__EMSCRIPTEN__)
-#ifndef GL_GLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#endif
-#include <GLES2/gl2ext.h>
-#endif
-#elif defined(IMGUI_IMPL_OPENGL_ES3)
-#if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV))
-#include <OpenGLES/ES3/gl.h>    // Use GL ES 3
-#else
-#include <GLES3/gl3.h>          // Use GL ES 3
-#endif
+#if defined(IMGUI_IMPL_OPENGL_LOAD_GLAD)
+#include <glad/glad.h>
+#elif defined(IMGUI_IMPL_OPENGL_LOAD_GLAD2)
+#include <glad/gl.h>
 #elif !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
 // Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 // Helper libraries are often used for this purpose! Here we are using our own minimal custom loader based on gl3w.
@@ -258,30 +244,6 @@ static ImGui_ImplOpenGL3_Data* ImGui_ImplOpenGL3_GetBackendData()
 static void ImGui_ImplOpenGL3_InitMultiViewportSupport();
 static void ImGui_ImplOpenGL3_ShutdownMultiViewportSupport();
 
-// OpenGL vertex attribute state (for ES 1.0 and ES 2.0 only)
-#ifndef IMGUI_IMPL_OPENGL_USE_VERTEX_ARRAY
-struct ImGui_ImplOpenGL3_VtxAttribState
-{
-    GLint   Enabled, Size, Type, Normalized, Stride;
-    GLvoid* Ptr;
-
-    void GetState(GLint index)
-    {
-        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &Enabled);
-        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_SIZE, &Size);
-        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_TYPE, &Type);
-        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &Normalized);
-        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &Stride);
-        glGetVertexAttribPointerv(index, GL_VERTEX_ATTRIB_ARRAY_POINTER, &Ptr);
-    }
-    void SetState(GLint index)
-    {
-        glVertexAttribPointer(index, Size, Type, (GLboolean)Normalized, Stride, Ptr);
-        if (Enabled) glEnableVertexAttribArray(index); else glDisableVertexAttribArray(index);
-    }
-};
-#endif
-
 // Functions
 bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
 {
@@ -290,7 +252,7 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     IM_ASSERT(io.BackendRendererUserData == nullptr && "Already initialized a renderer backend!");
 
     // Initialize our loader
-#if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
+#if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM) && !defined(IMGUI_IMPL_OPENGL_LOAD_GLAD)
     if (imgl3wInit() != 0)
     {
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
